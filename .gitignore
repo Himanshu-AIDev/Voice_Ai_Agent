@@ -6,3 +6,5 @@ Pipfile.lock
 poetry.lock
 Voice_Agent_Env/
 __pycache__/
+voice_env
+.env.local
