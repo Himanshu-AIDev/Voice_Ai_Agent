@@ -1,0 +1,995 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicare Hospital | Patient Voice Portal</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js"></script>
+
+    <style>
+        :root {
+            --primary: #0F766E;  /* Teal 700 */
+            --primary-light: #F0FDFA; /* Teal 50 */
+            --accent: #0D9488;   /* Teal 600 */
+            --bg-main: #F8FAFC;  /* Slate 50 */
+            --text-main: #1E293B; /* Slate 800 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Merriweather', serif;
+        }
+
+        /* GLASS CONSOLE */
+        .console-wrapper {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(15, 118, 110, 0.15); /* Teal shadow */
+            border-radius: 24px;
+            overflow: hidden;
+            height: 75vh;
+            display: flex;
+        }
+
+        .sidebar-panel { background: #FFFFFF; border-right: 1px solid #E2E8F0; }
+        .chat-panel { background: #F8FAFC; flex: 1; display: flex; flex-direction: column; } /* ✅ FIXED */
+        .visualizer-panel { background: #FFFFFF; border-left: 1px solid #E2E8F0; }
+
+        /* PULSING ORB BUTTON */
+        .voice-orb {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 10px 25px rgba(15, 118, 110, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .voice-orb:hover { transform: scale(1.05); }
+
+        .voice-orb.active {
+            background: #DC2626; /* Red for Stop */
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+            animation: pulse-ring 2s infinite;
+        }
+
+        .voice-orb.speaking {
+            animation: pulse-scale 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        @keyframes pulse-scale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* CHAT BUBBLES */
+        .bubble-assistant {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px 12px 12px 0;
+            padding: 16px;
+            color: #334155;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            font-size: 14px;
+            margin-bottom: 12px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .bubble-user {
+            background: var(--primary);
+            color: white;
+            border-radius: 12px 12px 0 12px;
+            padding: 16px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            margin-left: auto;
+            max-width: 85%;
+            box-shadow: 0 4px 10px rgba(15, 118, 110, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* STATUS DOT */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-dot.connected { background: #10B981; box-shadow: 0 0 10px #10B981; }
+        .status-dot.disconnected { background: #EF4444; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        
+        .feature-card { transition: all 0.3s; border: 1px solid #E2E8F0; }
+        .feature-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 20px rgba(15, 118, 110, 0.1); }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-teal-700 rounded-lg flex items-center justify-center text-white font-serif font-bold text-xl shadow-lg">M</div>
+                <div>
+                    <span class="block font-bold text-slate-900 text-lg leading-none">Medicare</span>
+                    <span class="text-[10px] font-bold text-teal-600 tracking-widest uppercase">Hospital Group</span>
+                </div>
+            </div>
+            
+            <div class="hidden md:flex gap-8 text-sm font-medium text-slate-500">
+                <a href="#console" class="hover:text-teal-700 transition">Voice Portal</a>
+                <a href="#doctors" class="hover:text-teal-700 transition">Our Specialists</a>
+                <a href="#" class="hover:text-teal-700 transition">Services</a>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="toggleSettings()" class="p-2 text-slate-400 hover:text-teal-700 transition" title="Configure Vapi">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                </button>
+                <button class="bg-red-50 text-red-600 px-5 py-2 rounded-full text-sm font-bold border border-red-100 hover:bg-red-100 transition flex items-center gap-2">
+                    <i data-lucide="phone" class="w-4 h-4"></i> Emergency: 999
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section id="console" class="py-10 px-6 max-w-[1600px] mx-auto w-full flex-1">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">Patient Care Voice Assistant</h1>
+            <p class="text-slate-500 max-w-xl mx-auto">Book appointments, reschedule visits, and check doctor availability using our advanced AI, <strong>Elara</strong>.</p>
+        </div>
+
+        <div class="console-wrapper">
+            
+            <aside class="w-80 sidebar-panel hidden md:flex flex-col p-6">
+                <div class="mb-6">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">System Status</h3>
+                    <div class="flex items-center gap-3 p-3 bg-teal-50 rounded-xl border border-teal-100">
+                        <div id="connectionDot" class="status-dot disconnected"></div>
+                        <span id="connectionText" class="text-sm font-bold text-teal-800">Ready to Connect</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto pr-2">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Capabilities</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-sm text-slate-700">Booking</span>
+                            </div>
+                            <p class="text-xs text-slate-500">"Book an appointment with Dr. Paul for next Tuesday."</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-orange-50 text-orange-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-sm text-slate-700">Rescheduling</span>
+                            </div>
+                            <p class="text-xs text-slate-500">"Move my appointment to 4 PM instead."</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="stethoscope" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-sm text-slate-700">Specialist Search</span>
+                            </div>
+                            <p class="text-xs text-slate-500">"I need a heart doctor in Delhi."</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="chat-panel relative">
+                <div class="p-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm flex justify-between items-center sticky top-0 z-10">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Live Transcript</span>
+                    <span class="px-2 py-1 rounded bg-slate-200 text-slate-600 text-[10px] font-bold">SECURE CHANNEL</span>
+                </div>
+
+                <div id="transcriptContainer" class="flex-1 overflow-y-auto p-6 scroll-smooth">
+                    <div id="emptyState" class="h-full flex flex-col items-center justify-center opacity-40">
+                        <i data-lucide="activity" class="w-16 h-16 text-teal-300 mb-4"></i>
+                        <p class="text-sm font-medium text-slate-400">Waiting for voice input...</p>
+                    </div>
+                    </div>
+            </main>
+
+            <aside class="w-80 visualizer-panel flex flex-col items-center justify-center p-8 bg-white relative z-20">
+                <div class="absolute top-6 right-6">
+                    <div class="w-2 h-2 bg-slate-300 rounded-full animate-pulse"></div>
+                </div>
+
+                <div class="text-center mb-8">
+                    <h2 class="text-lg font-serif font-bold text-slate-900">Elara</h2>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">AI Health Associate</p>
+                </div>
+
+                <button id="vapiButton" onclick="toggleCall()" class="voice-orb group mb-6">
+                    <i id="orbIcon" data-lucide="mic" class="w-8 h-8"></i>
+                </button>
+
+                <p id="statusLabel" class="text-sm font-bold text-slate-400">Tap to Connect</p>
+            </aside>
+
+        </div>
+    </section>
+
+    <section id="doctors" class="py-16 px-6 bg-white border-t border-slate-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-12">
+                <h2 class="text-2xl font-bold text-slate-900">Available Specialists</h2>
+                <span class="text-sm text-slate-500">Say these names to the AI</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-teal-600 uppercase mb-2">Delhi • Cardiology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. John</h3>
+                    <p class="text-sm text-slate-500 mt-1">Senior Cardiologist</p>
+                </div>
+                <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-indigo-600 uppercase mb-2">Delhi • Neurology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. Anthony</h3>
+                    <p class="text-sm text-slate-500 mt-1">Lead Neurologist</p>
+                </div>
+                <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-teal-600 uppercase mb-2">Bangalore • Cardiology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. Ravi</h3>
+                    <p class="text-sm text-slate-500 mt-1">Heart Specialist</p>
+                </div>
+                 <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-indigo-600 uppercase mb-2">Bangalore • Neurology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. Vikram</h3>
+                    <p class="text-sm text-slate-500 mt-1">Neuro Surgeon</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-white py-12 px-6 mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-teal-600 rounded flex items-center justify-center font-serif font-bold">M</div>
+                <span class="font-bold text-lg">Medicare Hospital</span>
+            </div>
+            <div class="text-slate-400 text-sm">
+                &copy; 2026 Medicare Digital Services. Secured by Vapi AI.
+            </div>
+        </div>
+    </footer>
+
+    <div id="settingsPanel" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-slate-900">Configuration</h2>
+                <button onclick="toggleSettings()" class="text-slate-400 hover:text-slate-900"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Vapi Public Key</label>
+                    <input type="text" id="vapiKey" placeholder="Ex: 843..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-teal-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assistant ID</label>
+                    <input type="text" id="assistantId" placeholder="Ex: 7a2..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-teal-500 transition">
+                </div>
+                
+                <div class="pt-4">
+                    <button onclick="saveSettings()" class="w-full bg-teal-700 text-white font-bold py-3 rounded-lg hover:bg-teal-800 transition shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Credentials
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // State Variables
+        var vapiInstance = null;
+        var isCallActive = false;
+
+        // --- DOM ELEMENTS ---
+        const btn = document.getElementById("vapiButton");
+        const orbIcon = document.getElementById("orbIcon");
+        const statusLabel = document.getElementById("statusLabel");
+        const connDot = document.getElementById("connectionDot");
+        const connText = document.getElementById("connectionText");
+        const transcriptContainer = document.getElementById("transcriptContainer");
+        const emptyState = document.getElementById("emptyState");
+
+        // --- SETTINGS MANAGEMENT ---
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('hidden');
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('vapiKey').value;
+            const asst = document.getElementById('assistantId').value;
+            
+            if(!key || !asst) {
+                alert("Please fill in both fields.");
+                return;
+            }
+
+            localStorage.setItem('vapi_public_key', key);
+            localStorage.setItem('vapi_assistant_id', asst);
+            toggleSettings();
+            initVapi(key); // Re-init with new key
+        }
+
+        // --- VAPI INITIALIZATION ---
+        function initVapi(key) {
+            if (!window.vapiSDK) {
+                console.error("Vapi SDK not loaded yet.");
+                return;
+            }
+            
+            try {
+                vapiInstance = window.vapiSDK.run({
+                    publicKey: key,
+                });
+
+                // --- EVENT LISTENERS ---
+                
+                // 1. Call Start
+                vapiInstance.on('call-start', () => {
+                    isCallActive = true;
+                    btn.classList.add('active');
+                    orbIcon.innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2" />'; // Square icon (Stop)
+                    lucide.createIcons();
+                    
+                    statusLabel.innerText = "Connected";
+                    connDot.className = "status-dot connected";
+                    connText.innerText = "Live Secure Connection";
+                    
+                    // Clear empty state
+                    emptyState.classList.add('hidden');
+                    appendSystemMessage("Secure channel established with Elara.");
+                });
+
+                // 2. Call End
+                vapiInstance.on('call-end', () => {
+                    isCallActive = false;
+                    btn.classList.remove('active', 'speaking');
+                    orbIcon.innerHTML = '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>'; // Mic icon
+                    lucide.createIcons();
+                    
+                    statusLabel.innerText = "Tap to Connect";
+                    connDot.className = "status-dot disconnected";
+                    connText.innerText = "Ready to Connect";
+                    
+                    appendSystemMessage("Call ended.");
+                });
+
+                // 3. Speech Active (Visualizer)
+                vapiInstance.on('speech-start', () => {
+                    btn.classList.add('speaking');
+                });
+                
+                vapiInstance.on('speech-end', () => {
+                    btn.classList.remove('speaking');
+                });
+
+                // 4. Messages (Transcripts)
+                vapiInstance.on('message', (msg) => {
+                    if (msg.type === "transcript" && msg.transcriptType === "final") {
+                        appendMessage(msg.role, msg.transcript);
+                    }
+                });
+
+                vapiInstance.on('error', (e) => {
+                    console.error("Vapi Error:", e);
+                    appendSystemMessage("Connection error. Check console.");
+                });
+
+            } catch (e) {
+                console.error("Init Error:", e);
+            }
+        }
+
+        // --- CALL CONTROL ---
+        function toggleCall() {
+            const key = localStorage.getItem('vapi_public_key');
+            const asstId = localStorage.getItem('vapi_assistant_id');
+
+            if (!key || !asstId) {
+                toggleSettings(); // Force user to set keys
+                return;
+            }
+
+            if (!vapiInstance) initVapi(key);
+
+            if (isCallActive) {
+                vapiInstance.stop();
+            } else {
+                vapiInstance.start(asstId);
+            }
+        }
+
+        // --- UI HELPERS ---
+        function appendMessage(role, text) {
+            const div = document.createElement("div");
+            div.className = role === "assistant" ? "bubble-assistant" : "bubble-user";
+            
+            // Add label
+            const label = document.createElement("div");
+            label.className = "text-[10px] font-bold uppercase mb-1 opacity-50";
+            label.innerText = role === "assistant" ? "Elara (AI)" : "Patient";
+            
+            div.appendChild(label);
+            div.appendChild(document.createTextNode(text));
+            
+            transcriptContainer.appendChild(div);
+            transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+        }
+
+        function appendSystemMessage(text) {
+            const div = document.createElement("div");
+            div.className = "text-center text-xs text-slate-400 font-medium my-4 italic";
+            div.innerText = text;
+            transcriptContainer.appendChild(div);
+            transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+        }
+
+        // --- ON LOAD ---
+        window.onload = () => {
+            const key = localStorage.getItem('vapi_public_key');
+            const asst = localStorage.getItem('vapi_assistant_id');
+
+            document.getElementById('vapiKey').value = key || '';
+            document.getElementById('assistantId').value = asst || '';
+
+            if (key) {
+                // Wait a moment for SDK to load
+                setTimeout(() => initVapi(key), 500);
+            } else {
+                // Open settings if no keys
+                setTimeout(toggleSettings, 1000);
+            }
+        };
+    </script>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicare Hospital | Patient Voice Portal</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+
+    <script type="module">
+        import Vapi from 'https://esm.sh/@vapi-ai/web';
+        window.Vapi = Vapi.default || Vapi;
+    </script>
+
+    <style>
+        :root {
+            --primary: #0F766E;  /* Teal 700 */
+            --primary-light: #F0FDFA; /* Teal 50 */
+            --accent: #0D9488;   /* Teal 600 */
+            --bg-main: #F8FAFC;  /* Slate 50 */
+            --text-main: #1E293B; /* Slate 800 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Merriweather', serif;
+        }
+
+        /* GLASS CONSOLE */
+        .console-wrapper {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(15, 118, 110, 0.15); /* Teal shadow */
+            border-radius: 24px;
+            overflow: hidden;
+            height: 75vh;
+            display: flex;
+        }
+
+        .sidebar-panel { background: #FFFFFF; border-right: 1px solid #E2E8F0; }
+        .chat-panel { background: #F8FAFC; flex: 1; display: flex; flex-direction: column; } 
+        .visualizer-panel { background: #FFFFFF; border-left: 1px solid #E2E8F0; }
+
+        /* PULSING ORB BUTTON */
+        .voice-orb {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 10px 25px rgba(15, 118, 110, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .voice-orb:hover { transform: scale(1.05); }
+
+        .voice-orb.active {
+            background: #DC2626; /* Red for Stop */
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+            animation: pulse-ring 2s infinite;
+        }
+
+        .voice-orb.speaking {
+            animation: pulse-scale 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        @keyframes pulse-scale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* CHAT BUBBLES */
+        .bubble-assistant {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px 12px 12px 0;
+            padding: 16px;
+            color: #334155;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            font-size: 14px;
+            margin-bottom: 12px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .bubble-user {
+            background: var(--primary);
+            color: white;
+            border-radius: 12px 12px 0 12px;
+            padding: 16px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            margin-left: auto;
+            max-width: 85%;
+            box-shadow: 0 4px 10px rgba(15, 118, 110, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* STATUS DOT */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-dot.connected { background: #10B981; box-shadow: 0 0 10px #10B981; }
+        .status-dot.disconnected { background: #EF4444; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        
+        .feature-card { transition: all 0.3s; border: 1px solid #E2E8F0; }
+        .feature-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 20px rgba(15, 118, 110, 0.1); }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-teal-700 rounded-lg flex items-center justify-center text-white font-serif font-bold text-xl shadow-lg">M</div>
+                <div>
+                    <span class="block font-bold text-slate-900 text-lg leading-none">Medicare</span>
+                    <span class="text-[10px] font-bold text-teal-600 tracking-widest uppercase">Hospital Group</span>
+                </div>
+            </div>
+            
+            <div class="hidden md:flex gap-8 text-sm font-medium text-slate-500">
+                <a href="#console" class="hover:text-teal-700 transition">Voice Portal</a>
+                <a href="#doctors" class="hover:text-teal-700 transition">Our Specialists</a>
+                <a href="#" class="hover:text-teal-700 transition">Services</a>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="toggleSettings()" class="p-2 text-slate-400 hover:text-teal-700 transition" title="Configure Vapi">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                </button>
+                <button class="bg-red-50 text-red-600 px-5 py-2 rounded-full text-sm font-bold border border-red-100 hover:bg-red-100 transition flex items-center gap-2">
+                    <i data-lucide="phone" class="w-4 h-4"></i> Emergency: 999
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section id="console" class="py-10 px-6 max-w-[1600px] mx-auto w-full flex-1">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">Patient Care Voice Assistant</h1>
+            <p class="text-slate-500 max-w-xl mx-auto">Book appointments, reschedule visits, and check doctor availability using our advanced AI, <strong>Elara</strong>.</p>
+        </div>
+
+        <div class="console-wrapper">
+            
+            <aside class="w-80 sidebar-panel hidden md:flex flex-col p-6">
+                <div class="mb-6">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">System Status</h3>
+                    <div class="flex items-center gap-3 p-3 bg-teal-50 rounded-xl border border-teal-100">
+                        <div id="connectionDot" class="status-dot disconnected"></div>
+                        <span id="connectionText" class="text-sm font-bold text-teal-800">Ready to Connect</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto pr-2">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Capabilities</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-sm text-slate-700">Booking</span>
+                            </div>
+                            <p class="text-xs text-slate-500">"Book an appointment with Dr. Paul for next Tuesday."</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-orange-50 text-orange-600 rounded-lg"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-sm text-slate-700">Rescheduling</span>
+                            </div>
+                            <p class="text-xs text-slate-500">"Move my appointment to 4 PM instead."</p>
+                        </div>
+
+                        <div class="p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="stethoscope" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-sm text-slate-700">Specialist Search</span>
+                            </div>
+                            <p class="text-xs text-slate-500">"I need a heart doctor in Delhi."</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="chat-panel relative">
+                <div class="p-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm flex justify-between items-center sticky top-0 z-10">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Live Transcript</span>
+                    <span class="px-2 py-1 rounded bg-slate-200 text-slate-600 text-[10px] font-bold">SECURE CHANNEL</span>
+                </div>
+
+                <div id="transcriptContainer" class="flex-1 overflow-y-auto p-6 scroll-smooth">
+                    <div id="emptyState" class="h-full flex flex-col items-center justify-center opacity-40">
+                        <i data-lucide="activity" class="w-16 h-16 text-teal-300 mb-4"></i>
+                        <p class="text-sm font-medium text-slate-400">Waiting for voice input...</p>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="w-80 visualizer-panel flex flex-col items-center justify-center p-8 bg-white relative z-20">
+                <div class="absolute top-6 right-6">
+                    <div class="w-2 h-2 bg-slate-300 rounded-full animate-pulse"></div>
+                </div>
+
+                <div class="text-center mb-8">
+                    <h2 class="text-lg font-serif font-bold text-slate-900">Elara</h2>
+                    <p class="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">AI Health Associate</p>
+                </div>
+
+                <button id="vapiButton" onclick="toggleCall()" class="voice-orb group mb-6">
+                    <i id="orbIcon" data-lucide="mic" class="w-8 h-8"></i>
+                </button>
+
+                <p id="statusLabel" class="text-sm font-bold text-slate-400">Tap to Connect</p>
+            </aside>
+
+        </div>
+    </section>
+
+    <section id="doctors" class="py-16 px-6 bg-white border-t border-slate-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-12">
+                <h2 class="text-2xl font-bold text-slate-900">Available Specialists</h2>
+                <span class="text-sm text-slate-500">Say these names to the AI</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-teal-600 uppercase mb-2">Delhi • Cardiology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. John</h3>
+                    <p class="text-sm text-slate-500 mt-1">Senior Cardiologist</p>
+                </div>
+                <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-indigo-600 uppercase mb-2">Delhi • Neurology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. Anthony</h3>
+                    <p class="text-sm text-slate-500 mt-1">Lead Neurologist</p>
+                </div>
+                <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-teal-600 uppercase mb-2">Bangalore • Cardiology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. Ravi</h3>
+                    <p class="text-sm text-slate-500 mt-1">Heart Specialist</p>
+                </div>
+                 <div class="feature-card p-6 bg-white rounded-xl">
+                    <div class="text-xs font-bold text-indigo-600 uppercase mb-2">Bangalore • Neurology</div>
+                    <h3 class="text-lg font-bold text-slate-900">Dr. Vikram</h3>
+                    <p class="text-sm text-slate-500 mt-1">Neuro Surgeon</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-white py-12 px-6 mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-teal-600 rounded flex items-center justify-center font-serif font-bold">M</div>
+                <span class="font-bold text-lg">Medicare Hospital</span>
+            </div>
+            <div class="text-slate-400 text-sm">
+                &copy; 2026 Medicare Digital Services. Secured by Vapi AI.
+            </div>
+        </div>
+    </footer>
+
+    <div id="settingsPanel" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-slate-900">Configuration</h2>
+                <button onclick="toggleSettings()" class="text-slate-400 hover:text-slate-900"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Vapi Public Key</label>
+                    <input type="text" id="vapiKey" placeholder="Ex: 843..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-teal-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assistant ID</label>
+                    <input type="text" id="assistantId" placeholder="Ex: 7a2..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-teal-500 transition">
+                </div>
+                
+                <div class="pt-4">
+                    <button onclick="saveSettings()" class="w-full bg-teal-700 text-white font-bold py-3 rounded-lg hover:bg-teal-800 transition shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Credentials
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // State Variables
+        var vapiInstance = null;
+        var isCallActive = false;
+
+        // --- DOM ELEMENTS ---
+        const btn = document.getElementById("vapiButton");
+        const orbIcon = document.getElementById("orbIcon");
+        const statusLabel = document.getElementById("statusLabel");
+        const connDot = document.getElementById("connectionDot");
+        const connText = document.getElementById("connectionText");
+        const transcriptContainer = document.getElementById("transcriptContainer");
+        const emptyState = document.getElementById("emptyState");
+
+        // --- SETTINGS MANAGEMENT ---
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('hidden');
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('vapiKey').value;
+            const asst = document.getElementById('assistantId').value;
+            
+            if(!key || !asst) {
+                alert("Please fill in both fields.");
+                return;
+            }
+
+            localStorage.setItem('vapi_public_key', key);
+            localStorage.setItem('vapi_assistant_id', asst);
+            toggleSettings();
+            
+            // Re-init with new key if needed
+            if (window.initVapi) window.initVapi(key); 
+        }
+
+        // --- ✅ NEW ROBUST VAPI LOGIC (Based on your Working Code) ---
+        window.initVapi = function(key) {
+            // Check if Vapi class is loaded from the module script
+            if (!window.Vapi) {
+                console.warn("Vapi SDK not loaded yet. Retrying...");
+                setTimeout(() => window.initVapi(key), 500);
+                return;
+            }
+
+            try {
+                // Instantiation
+                vapiInstance = new window.Vapi(key);
+
+                // --- EVENT LISTENERS ---
+                
+                // 1. Call Start
+                vapiInstance.on('call-start', () => {
+                    isCallActive = true;
+                    btn.classList.add('active');
+                    orbIcon.innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2" />'; // Stop Icon
+                    lucide.createIcons();
+                    
+                    statusLabel.innerText = "Connected";
+                    connDot.className = "status-dot connected";
+                    connText.innerText = "Live Secure Connection";
+                    
+                    emptyState.classList.add('hidden');
+                    appendSystemMessage("Secure channel established with Elara.");
+                });
+
+                // 2. Call End
+                vapiInstance.on('call-end', () => {
+                    isCallActive = false;
+                    btn.classList.remove('active', 'speaking');
+                    orbIcon.innerHTML = '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>'; // Mic Icon
+                    lucide.createIcons();
+                    
+                    statusLabel.innerText = "Tap to Connect";
+                    connDot.className = "status-dot disconnected";
+                    connText.innerText = "Ready to Connect";
+                    
+                    appendSystemMessage("Call ended.");
+                });
+
+                // 3. Speech Active (Visualizer)
+                vapiInstance.on('speech-start', () => {
+                    btn.classList.add('speaking');
+                });
+                
+                vapiInstance.on('speech-end', () => {
+                    btn.classList.remove('speaking');
+                });
+
+                // 4. Messages (Transcripts)
+                vapiInstance.on('message', (msg) => {
+                    if (msg.type === "transcript" && msg.transcriptType === "final") {
+                        if (msg.role === "assistant" && msg.transcript) {
+                             appendMessage("assistant", msg.transcript);
+                        }
+                        if (msg.role === "user" && msg.transcript) {
+                             appendMessage("user", msg.transcript);
+                        }
+                    }
+                });
+
+                vapiInstance.on('error', (e) => {
+                    console.error("Vapi Error:", e);
+                    appendSystemMessage("Connection error. Check console.");
+                });
+
+                console.log("Vapi Initialized Successfully");
+
+            } catch (e) {
+                console.error("Init Error:", e);
+            }
+        }
+
+        // --- CALL CONTROL ---
+        function toggleCall() {
+            const key = localStorage.getItem('vapi_public_key');
+            const asstId = localStorage.getItem('vapi_assistant_id');
+
+            if (!key || !asstId) {
+                toggleSettings(); // Force user to set keys
+                return;
+            }
+
+            // Initialize if not already done
+            if (!vapiInstance) {
+                window.initVapi(key);
+                // Give it a split second to instantiate before starting
+                setTimeout(() => {
+                    if(vapiInstance) vapiInstance.start(asstId);
+                }, 100);
+                return;
+            }
+
+            if (isCallActive) {
+                vapiInstance.stop();
+            } else {
+                vapiInstance.start(asstId);
+            }
+        }
+
+        // --- UI HELPERS ---
+        function appendMessage(role, text) {
+            const div = document.createElement("div");
+            div.className = role === "assistant" ? "bubble-assistant" : "bubble-user";
+            
+            // Add label
+            const label = document.createElement("div");
+            label.className = "text-[10px] font-bold uppercase mb-1 opacity-50";
+            label.innerText = role === "assistant" ? "Elara (AI)" : "Patient";
+            
+            div.appendChild(label);
+            div.appendChild(document.createTextNode(text));
+            
+            transcriptContainer.appendChild(div);
+            transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+        }
+
+        function appendSystemMessage(text) {
+            const div = document.createElement("div");
+            div.className = "text-center text-xs text-slate-400 font-medium my-4 italic";
+            div.innerText = text;
+            transcriptContainer.appendChild(div);
+            transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+        }
+
+        // --- ON LOAD ---
+        window.onload = () => {
+            const key = localStorage.getItem('vapi_public_key');
+            const asst = localStorage.getItem('vapi_assistant_id');
+
+            document.getElementById('vapiKey').value = key || '';
+            document.getElementById('assistantId').value = asst || '';
+
+            if (key) {
+                // Initialize Vapi immediately if key exists
+                setTimeout(() => window.initVapi(key), 500);
+            } else {
+                // Open settings if no keys
+                setTimeout(toggleSettings, 1000);
+            }
+        };
+    </script>
+</body>
+</html>
